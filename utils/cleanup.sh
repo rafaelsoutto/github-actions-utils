@@ -54,7 +54,7 @@ set -euo pipefail
 delete_cluster_load_balancers() {
   local CLUSTER_NAME="${1:?Cluster name is required}"
   local REGION="${2:-eu-west-1}"
-  local DRY_RUN="${3:-true}"
+  local DRY_RUN="${3:-false}"
 
   echo "🔎 Searching for load balancers tagged with: elbv2.k8s.aws/cluster = ${CLUSTER_NAME}"
   echo "Region: $REGION"

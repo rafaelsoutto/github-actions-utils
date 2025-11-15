@@ -13,9 +13,6 @@
 
 set -euo pipefail
 
-# shellcheck source=./scripts/utils/logging.sh
-source "./scripts/utils/logging.sh"
-
 log_debug "Sourcing $(basename "${BASH_SOURCE[0]}")"
 
 ##
@@ -172,8 +169,6 @@ terraform_output_env_vars() {
 run_terraform_action() {
   local action="$1"
   local path="$2"
-  local vars="$3"
-  local targets="$4"
   shift 2
 
   [[ -z "${TERRAFORM_STATE_BUCKET:-}" ]] && log_fatal "TERRAFORM_STATE_BUCKET not set"
@@ -185,13 +180,13 @@ run_terraform_action() {
 
   case "$action" in
     plan)
-      terraform_plan "$path" $vars -- $targets
+      terraform_plan "$path" "$@"
       ;;
     apply)
-      terraform_apply "$path" $vars -- $targets
+      terraform_apply "$path" "$@"
       ;;
     destroy)
-      terraform_destroy "$path" $vars -- $targets
+      terraform_destroy "$path" "$@"
       ;;
     *)
       log_error "Unknown action: $action"

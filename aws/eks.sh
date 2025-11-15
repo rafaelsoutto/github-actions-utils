@@ -3,37 +3,42 @@ eks_login() {
   local region="$2"
   local profile="${3:-}"
 
+  log_debug "Entering eks_login() with cluster=$cluster_name, region=$region, profile=$profile"
+
   if [[ -z "$cluster_name" ]]; then
-    echo "❌ eks_login: missing cluster name" >&2
-    return 1
+    log_fatal "eks_login: missing cluster name"
   fi
 
   if [[ -z "$region" ]]; then
-    echo "❌ eks_login: missing AWS region" >&2
-    return 1
+    log_fatal "eks_login: missing AWS region"
   fi
 
-  echo "🔐 Logging into EKS cluster: $cluster_name"
-  echo "🌍 Region: $region"
-  [[ -n "$profile" ]] && echo "👤 AWS Profile: $profile"
+  log_info "🔐 Logging into EKS cluster: $cluster_name"
+  log_info "🌍 Region: $region"
+  [[ -n "$profile" ]] && log_info "👤 AWS Profile: $profile"
 
   local profile_args=()
-  [[ -n "$profile" ]] && profile_args+=(--profile "$profile")
+  if [[ -n "$profile" ]]; then
+    profile_args+=(--profile "$profile")
+  fi
 
-  # Update kubeconfig
-  if ! aws eks update-kubeconfig \
+  log_debug "Running: aws eks update-kubeconfig --name $cluster_name"
+  if ! log_exec aws eks update-kubeconfig \
       --region "$region" \
       --name "$cluster_name" \
       "${profile_args[@]}"; then
-    echo "❌ Failed to update kubeconfig for cluster: $cluster_name" >&2
-    return 2
+    log_fatal "Failed to update kubeconfig for cluster '$cluster_name'"
   fi
 
-  # Test access
+  log_info "Kubeconfig updated successfully."
+
+  log_debug "Testing kubectl access..."
   if ! kubectl get svc kube-dns -n kube-system >/dev/null 2>&1; then
-    echo "⚠️  Connected, but unable to query kube-system/kube-dns" >&2
-    echo "   Possible IAM or RBAC config issue."
+    log_warn "Connected, but unable to query kube-system/kube-dns."
+    log_warn "This may indicate missing IAM or RBAC permissions."
   else
-    echo "✅ Successfully connected to cluster: $cluster_name"
+    log_info "✅ Successfully connected to EKS cluster '$cluster_name'"
   fi
+
+  log_debug "eks_login() completed successfully"
 }

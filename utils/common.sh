@@ -5,7 +5,7 @@ get_environment_by_branch() {
 
   case "$branch_name" in
     main | master)
-      export ENVIRONMENT="production"
+      export ENVIRONMENT="prod"
       ;;
     develop | dev)
       export ENVIRONMENT="dev"
